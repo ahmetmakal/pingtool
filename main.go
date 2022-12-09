@@ -1,9 +1,14 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -17,38 +22,49 @@ var Cyan = "\033[36m"
 var Gray = "\033[37m"
 var White = "\033[97m"
 
+type Data struct {
+	IpShow bool   `json:"ip_show"`
+	IpList string `json:"ip_list"`
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
 func main() {
 
-	// content, err := ioutil.ReadFile("ping-ips.txt")
-	// if err != nil {
-	// 	fmt.Println("ping-ips.txt dosyası hatalı")
-	// }
-	// content = []byte(strings.Replace(string(content), "\n", "", -1))
-	// lines := strings.Split(string(content), ",")
+	configFile := "./ping.config.json"
 
-	address := []string{
-		"8.8.8.8",
-		"77.88.8.8",
-		"1.1.1.1",
+	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
+		fmt.Println(configFile + " dosyasini duzenleyebilirsiniz")
+		d1 := []byte("{\n    \"ip_show\": true,\n    \"ip_list\": \"8.8.8.8,77.88.8.8,208.67.222.222\"\n}")
+		err := os.WriteFile(configFile, d1, 0644)
+		check(err)
 	}
 
-	Ping := make([]string, len(address))
-	for i, v := range address {
-		// fmt.Println(i, v)
-		if v != "\r\n" {
-			Ping[i] = v
-		}
+	content, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
 	}
 
-	fmt.Println(Ping)
+	// Now let's unmarshall the data into `payload`
+	var payload Data
+	err = json.Unmarshal(content, &payload)
+	if err != nil {
+		log.Fatal("Error during Unmarshal(): ", err)
+	}
+
+	ips := strings.Split(payload.IpList, ",")
 
 	for {
-		fmt.Println(pingAt(Ping))
+		fmt.Println(pingAt(ips, payload.IpShow))
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func pingAt(ipAdresi []string) []string {
+func pingAt(ipAdresi []string, ipShow bool) []string {
 
 	var my_slice []string
 	for _, v := range ipAdresi {
@@ -61,10 +77,18 @@ func pingAt(ipAdresi []string) []string {
 		}
 
 		if string(shellOut) == "" {
-			my_slice = append(my_slice, Red+"err"+Reset)
+			if ipShow {
+				my_slice = append(my_slice, v+": "+Red+"err"+Reset)
+			} else {
+				my_slice = append(my_slice, Red+"err"+Reset)
+			}
 		}
 
-		my_slice = append(my_slice, Green+string(shellOut)+Reset)
+		if ipShow {
+			my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
+		} else {
+			my_slice = append(my_slice, Green+string(shellOut)+Reset)
+		}
 	}
 
 	return my_slice
