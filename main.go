@@ -23,8 +23,9 @@ var Gray = "\033[37m"
 var White = "\033[97m"
 
 type Data struct {
-	IpShow bool   `json:"ip_show"`
-	IpList string `json:"ip_list"`
+	IpShow  bool   `json:"ip_show"`
+	IpList  string `json:"ip_list"`
+	TabSize uint   `json:"tab_size"`
 }
 
 func check(e error) {
@@ -39,7 +40,7 @@ func main() {
 
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
 		fmt.Println(configFile + " dosyasini duzenleyebilirsiniz")
-		d1 := []byte("{\n    \"ip_show\": true,\n    \"ip_list\": \"8.8.8.8,77.88.8.8,208.67.222.222\"\n}")
+		d1 := []byte("{\n    \"ip_show\": true,\n    \"tab_size\": 1,\n    \"ip_list\": \"8.8.8.8,77.88.8.8,208.67.222.222\"\n}")
 		err := os.WriteFile(configFile, d1, 0644)
 		check(err)
 	}
@@ -59,12 +60,24 @@ func main() {
 	ips := strings.Split(payload.IpList, ",")
 
 	for {
-		fmt.Println(pingAt(ips, payload.IpShow))
+		fmt.Println(pingAt(ips, payload.IpShow, payload.TabSize))
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func pingAt(ipAdresi []string, ipShow bool) []string {
+func pingAt(ipAdresi []string, ipShow bool, tabSize uint) []string {
+
+	tab := ""
+	switch {
+	case tabSize == 0:
+		tab = ""
+	case tabSize == 1:
+		tab = "\t"
+	case tabSize == 2:
+		tab = "\t\t"
+	case tabSize == 3:
+		tab = "\t\t\t"
+	}
 
 	var my_slice []string
 	for _, v := range ipAdresi {
@@ -78,16 +91,16 @@ func pingAt(ipAdresi []string, ipShow bool) []string {
 
 		if string(shellOut) == "" {
 			if ipShow {
-				my_slice = append(my_slice, v+": "+Red+"err"+Reset)
+				my_slice = append(my_slice, v+": "+Red+"err"+Reset+tab)
 			} else {
-				my_slice = append(my_slice, Red+"err"+Reset)
+				my_slice = append(my_slice, Red+"err"+Reset+tab)
 			}
-		}
-
-		if ipShow {
-			my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
 		} else {
-			my_slice = append(my_slice, Green+string(shellOut)+Reset)
+			if ipShow {
+				my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset+tab)
+			} else {
+				my_slice = append(my_slice, Green+string(shellOut)+Reset+tab)
+			}
 		}
 	}
 
