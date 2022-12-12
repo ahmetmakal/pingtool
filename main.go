@@ -59,25 +59,32 @@ func main() {
 
 	ips := strings.Split(payload.IpList, ",")
 
+	tab := ""
+	switch {
+	case payload.TabSize == 0:
+		tab = " "
+	case payload.TabSize == 1:
+		tab = "\t"
+	case payload.TabSize == 2:
+		tab = "\t\t"
+	case payload.TabSize == 3:
+		tab = "\t\t\t"
+	}
+
 	for {
-		fmt.Println(pingAt(ips, payload.IpShow, payload.TabSize))
+		fs := pingAt(ips, payload.IpShow)
+		for i, v := range fs {
+			if i > 0 {
+				fmt.Print(tab)
+			}
+			fmt.Print(v)
+		}
+		fmt.Print("\n")
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func pingAt(ipAdresi []string, ipShow bool, tabSize uint) []string {
-
-	tab := ""
-	switch {
-	case tabSize == 0:
-		tab = ""
-	case tabSize == 1:
-		tab = "\t"
-	case tabSize == 2:
-		tab = "\t\t"
-	case tabSize == 3:
-		tab = "\t\t\t"
-	}
+func pingAt(ipAdresi []string, ipShow bool) []string {
 
 	var my_slice []string
 	for _, v := range ipAdresi {
@@ -91,15 +98,15 @@ func pingAt(ipAdresi []string, ipShow bool, tabSize uint) []string {
 
 		if string(shellOut) == "" {
 			if ipShow {
-				my_slice = append(my_slice, v+": "+Red+"err"+Reset+tab)
+				my_slice = append(my_slice, v+": "+Red+"err"+Reset)
 			} else {
-				my_slice = append(my_slice, Red+"err"+Reset+tab)
+				my_slice = append(my_slice, Red+"err"+Reset)
 			}
 		} else {
 			if ipShow {
-				my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset+tab)
+				my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
 			} else {
-				my_slice = append(my_slice, Green+string(shellOut)+Reset+tab)
+				my_slice = append(my_slice, Green+string(shellOut)+Reset)
 			}
 		}
 	}
