@@ -26,6 +26,7 @@ type Data struct {
 	IpShow  bool   `json:"ip_show"`
 	IpList  string `json:"ip_list"`
 	TabSize uint   `json:"tab_size"`
+	Dot     bool   `json:"dot"`
 }
 
 func check(e error) {
@@ -72,7 +73,7 @@ func main() {
 	}
 
 	for {
-		fs := pingAt(ips, payload.IpShow)
+		fs := pingAt(ips, payload.IpShow, payload.Dot)
 		for i, v := range fs {
 			if i > 0 {
 				fmt.Print(tab)
@@ -84,12 +85,18 @@ func main() {
 	}
 }
 
-func pingAt(ipAdresi []string, ipShow bool) []string {
+func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 
 	var my_slice []string
 	for _, v := range ipAdresi {
 
-		shell := "ping " + v + " -c 1 -i 1 -t 1 | grep icmp_seq | awk '{print $7}' | cut -d= -f2 | cut -d. -f1 | tr -d '\n'"
+		var shell string
+
+		if dot {
+			shell = "ping " + v + " -c 1 -i 1 -t 1 | grep icmp_seq | awk '{print $7}' | cut -d= -f2 | tr -d '\n'"
+		} else {
+			shell = "ping " + v + " -c 1 -i 1 -t 1 | grep icmp_seq | awk '{print $7}' | cut -d= -f2 | cut -d. -f1 | tr -d '\n'"
+		}
 		shellOut, err := exec.Command("sh", "-c", shell).Output()
 		if err != nil {
 			fmt.Println("error shell")
