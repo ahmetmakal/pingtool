@@ -137,7 +137,7 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 				digit := re.FindStringSubmatch(cutDigit)
 				outputPing = strings.Join(digit, " ")
 			} else {
-				fmt.Print("Ping error.")
+				my_slice = append(my_slice, Red+"err"+Reset)
 			}
 			if outputPing == "" {
 				if ipShow {
