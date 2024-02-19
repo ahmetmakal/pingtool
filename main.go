@@ -30,6 +30,7 @@ type Data struct {
 	DateShow bool   `json:"date_show"`
 	IpList   string `json:"ip_list"`
 	TabSize  uint   `json:"tab_size"`
+	LogError bool   `json:"log_error"`
 	Dot      bool   `json:"dot"`
 }
 
@@ -77,7 +78,7 @@ func main() {
 	}
 
 	for {
-		fs := pingAt(ips, payload.IpShow, payload.Dot)
+		fs := pingAt(ips, payload.IpShow, payload.Dot, payload.LogError)
 		if payload.DateShow {
 			fmt.Print("[" + time.Now().Format("02/01/2006 15:04:05") + "]" + tab)
 		}
@@ -92,7 +93,7 @@ func main() {
 	}
 }
 
-func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
+func pingAt(ipAdresi []string, ipShow bool, dot bool, logerr bool) []string {
 
 	var my_slice []string
 	for _, v := range ipAdresi {
@@ -118,7 +119,9 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 				} else {
 					my_slice = append(my_slice, Red+"err"+Reset)
 				}
-				logError("Err " + v)
+				if logerr {
+					logError("Err " + v)
+				}
 			} else {
 				if ipShow {
 					my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
@@ -140,7 +143,9 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 				} else {
 					my_slice = append(my_slice, Red+"err"+Reset)
 				}
-				logError("Err " + v)
+				if logerr {
+					logError("Err " + v)
+				}
 			} else {
 				if ipShow {
 					my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
@@ -165,12 +170,18 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 				outputPing = strings.Join(digit, " ")
 			} else {
 				my_slice = append(my_slice, Red+"err"+Reset)
+				if logerr {
+					logError("Err " + v)
+				}
 			}
 			if outputPing == "" {
 				if ipShow {
 					my_slice = append(my_slice, v+": "+Red+"err"+Reset)
 				} else {
 					my_slice = append(my_slice, Red+"err"+Reset)
+				}
+				if logerr {
+					logError("Err " + v)
 				}
 			} else {
 				if ipShow {
