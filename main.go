@@ -42,11 +42,18 @@ func check(e error) {
 
 func main() {
 
-	configFile := "./ping.config.json"
+	configFile := "./pingtool.config.json"
 
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
 		fmt.Println(configFile + " dosyasini duzenleyebilirsiniz")
-		d1 := []byte("{\n    \"ip_show\": true,\n    \"tab_size\": 1,\n    \"ip_list\": \"8.8.8.8,77.88.8.8,208.67.222.222\"\n}")
+		d1 := []byte(`{
+			"ip_show": true,
+			"date_show": true,
+			"dot": false,
+			"tab_size": 0,
+			"log_error": true,
+			"ip_list": "8.8.8.8,77.88.8.8,208.67.222.222"
+		}`)
 		err := os.WriteFile(configFile, d1, 0644)
 		check(err)
 	}
