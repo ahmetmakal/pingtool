@@ -1,6 +1,8 @@
 {
     "ip_show": true,
+    "date_show": true,
     "dot": false,
     "tab_size": 0,
+    "log_error": true,
     "ip_list": "8.8.8.8,77.88.8.8,208.67.222.222"
 }

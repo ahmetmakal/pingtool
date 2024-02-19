@@ -26,10 +26,11 @@ var White = "\033[97m"
 var detectOS = runtime.GOOS
 
 type Data struct {
-	IpShow  bool   `json:"ip_show"`
-	IpList  string `json:"ip_list"`
-	TabSize uint   `json:"tab_size"`
-	Dot     bool   `json:"dot"`
+	IpShow   bool   `json:"ip_show"`
+	DateShow bool   `json:"date_show"`
+	IpList   string `json:"ip_list"`
+	TabSize  uint   `json:"tab_size"`
+	Dot      bool   `json:"dot"`
 }
 
 func check(e error) {
@@ -77,6 +78,9 @@ func main() {
 
 	for {
 		fs := pingAt(ips, payload.IpShow, payload.Dot)
+		if payload.DateShow {
+			fmt.Print("[" + time.Now().Format("02/01/2006 15:04:05") + "]" + tab)
+		}
 		for i, v := range fs {
 			if i > 0 {
 				fmt.Print(tab)
@@ -114,6 +118,29 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 				} else {
 					my_slice = append(my_slice, Red+"err"+Reset)
 				}
+				logError("Err " + v)
+			} else {
+				if ipShow {
+					my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
+				} else {
+					my_slice = append(my_slice, Green+string(shellOut)+Reset)
+				}
+			}
+		case "linux":
+			shell = "ping " + v + " -c 1 -i 1 | grep icmp_seq | awk '{print $7}' | cut -d= -f2 | tr -d '\n'"
+			shellOut, err := exec.Command("sh", "-c", shell).Output()
+			if err != nil {
+				fmt.Println("error shell")
+				log.Fatal(err)
+			}
+
+			if string(shellOut) == "" {
+				if ipShow {
+					my_slice = append(my_slice, v+": "+Red+"err"+Reset)
+				} else {
+					my_slice = append(my_slice, Red+"err"+Reset)
+				}
+				logError("Err " + v)
 			} else {
 				if ipShow {
 					my_slice = append(my_slice, v+": "+Green+string(shellOut)+Reset)
@@ -156,4 +183,16 @@ func pingAt(ipAdresi []string, ipShow bool, dot bool) []string {
 	}
 
 	return my_slice
+}
+
+func logError(message string) {
+	logFile, err := os.OpenFile("pingtool.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println("Error opening file:", err)
+		return
+	}
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
+	log.Println(message)
 }
